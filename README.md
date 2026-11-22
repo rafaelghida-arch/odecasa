@@ -9,7 +9,7 @@ qualquer momento na mesma conversa.
 
 - Next.js 16 (App Router) · TypeScript · Tailwind CSS 4
 - Supabase Auth (link mágico / código por e-mail) + Postgres com Row Level Security
-- Google Gemini no plano gratuito (padrão `gemini-2.5-flash`, com visão) chamado só pelo servidor — OpenAI e Anthropic como alternativas pagas — e modo demonstração sem credenciais
+- Google Gemini no plano gratuito (padrão `gemini-3.5-flash`, com visão) chamado só pelo servidor — OpenAI e Anthropic como alternativas pagas — e modo demonstração sem credenciais
 - Pronto para Vercel
 
 ![Celular](docs/screenshots/04-resposta-mae.png)
@@ -119,8 +119,9 @@ Sem Supabase configurado o app ainda funciona como visitante (o login aparece co
 ## Publicando: provedor de IA
 
 **Gratuito (padrão):** crie uma chave em https://aistudio.google.com/apikey (sem cartão) e defina
-`GEMINI_API_KEY`. O app usa o endpoint do Gemini compatível com a API da OpenAI; o modelo padrão é
-`gemini-2.5-flash` (troque com `GEMINI_MODEL`). No plano gratuito há limite de pedidos por minuto e por dia, e o
+`GEMINI_API_KEY`. O app usa o endpoint do Gemini compatível com a API da OpenAI; os modelos padrão são
+`gemini-3.5-flash`, `gemini-3.8-flash` e `gemini-3.5-flash-lite`, tentados em ordem quando um está
+sobrecarregado (troque com `GEMINI_MODEL`, lista separada por vírgula). No plano gratuito há limite de pedidos por minuto e por dia, e o
 Google pode usar o conteúdo enviado para melhorar os serviços dele — o app avisa isso antes de enviar a foto.
 
 **Pagos (opcional):** `AI_PROVIDER=openai` com `OPENAI_API_KEY` (modelo `OPENAI_MODEL`, padrão `gpt-5.4-mini`). A chave só é lida no servidor (`src/lib/server-env.ts` importa `server-only`), nunca chega ao

@@ -16,7 +16,7 @@ function getClient(flavor: Flavor): OpenAI {
   if (!clients[flavor]) {
     clients[flavor] =
       flavor === "gemini"
-        ? new OpenAI({ apiKey: serverEnv.geminiApiKey, baseURL: GEMINI_BASE_URL, maxRetries: 2, timeout: 55_000 })
+        ? new OpenAI({ apiKey: serverEnv.geminiApiKey, baseURL: GEMINI_BASE_URL, maxRetries: 0, timeout: 30_000 })
         : new OpenAI({ apiKey: serverEnv.openaiApiKey, maxRetries: 2, timeout: 55_000 });
   }
   return clients[flavor]!;
@@ -56,36 +56,60 @@ function buildMessages(
   return messages;
 }
 
+function isBusy(err: unknown): boolean {
+  return (
+    err instanceof OpenAI.RateLimitError ||
+    err instanceof OpenAI.InternalServerError ||
+    err instanceof OpenAI.APIConnectionError // inclui tempo esgotado
+  );
+}
+
+function readText(completion: OpenAI.Chat.Completions.ChatCompletion): string {
+  const choice = completion.choices[0];
+  if (!choice || choice.message.refusal) throw new AIRefusalError("refusal");
+  const text = (choice.message.content ?? "").trim();
+  if (!text) throw new AIRefusalError("empty");
+  return text;
+}
+
 /** OpenAI ou Gemini (via endpoint compatível). */
 export async function generateWithOpenAI(opts: GenerateOptions, flavor: Flavor = "openai"): Promise<string> {
   const system = `${BASE_SYSTEM_PROMPT}\n\n${systemPromptFor(opts.mode, opts.hazard ? HAZARD_HINT[opts.hazard] : null)}`;
-  try {
-    const messages = buildMessages(flavor, system, opts.history, opts.text, opts.newImage, opts.contextImage);
-    const completion =
-      flavor === "gemini"
-        ? await getClient("gemini").chat.completions.create({
-            model: serverEnv.geminiModel,
-            messages,
-            max_tokens: 6000,
-          })
-        : await getClient("openai").chat.completions.create({
-            model: serverEnv.openaiModel,
-            messages,
-            max_completion_tokens: 6000,
-          });
-    const choice = completion.choices[0];
-    if (!choice || choice.message.refusal) throw new AIRefusalError("refusal");
-    const text = (choice.message.content ?? "").trim();
-    if (!text) throw new AIRefusalError("empty");
-    return text;
-  } catch (err) {
-    if (
-      err instanceof OpenAI.RateLimitError ||
-      err instanceof OpenAI.InternalServerError ||
-      err instanceof OpenAI.APIConnectionError
-    ) {
-      throw new AIBusyError("busy", { cause: err });
+  const messages = buildMessages(flavor, system, opts.history, opts.text, opts.newImage, opts.contextImage);
+
+  if (flavor === "openai") {
+    try {
+      return readText(
+        await getClient("openai").chat.completions.create({
+          model: serverEnv.openaiModel,
+          messages,
+          max_completion_tokens: 6000,
+        }),
+      );
+    } catch (err) {
+      if (isBusy(err)) throw new AIBusyError("busy", { cause: err });
+      throw err;
     }
-    throw err;
   }
+
+  // Gemini gratuito: tenta os modelos em ordem quando um está sobrecarregado,
+  // sem passar do tempo máximo da função na Vercel (60 s).
+  const started = Date.now();
+  let lastErr: unknown = null;
+  for (const model of serverEnv.geminiModels) {
+    const remaining = 52_000 - (Date.now() - started);
+    if (remaining < 8_000) break;
+    try {
+      return readText(
+        await getClient("gemini").chat.completions.create(
+          { model, messages, max_tokens: 6000 },
+          { timeout: Math.min(30_000, remaining), maxRetries: 0 },
+        ),
+      );
+    } catch (err) {
+      if (!isBusy(err) && !(err instanceof OpenAI.NotFoundError)) throw err;
+      lastErr = err;
+    }
+  }
+  throw new AIBusyError("busy", { cause: lastErr });
 }

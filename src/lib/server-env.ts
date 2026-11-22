@@ -11,7 +11,11 @@ export const serverEnv = {
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
   openaiModel: process.env.OPENAI_MODEL || "gpt-5.4-mini",
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
-  geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+  /** Lista separada por vírgula: o primeiro é o preferido; os outros entram quando ele está ocupado. */
+  geminiModels: (process.env.GEMINI_MODEL || "gemini-3.5-flash,gemini-3.8-flash,gemini-3.5-flash-lite")
+    .split(",")
+    .map((m) => m.trim())
+    .filter(Boolean),
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   anthropicModel: process.env.ANTHROPIC_MODEL || "claude-opus-5-5",
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
