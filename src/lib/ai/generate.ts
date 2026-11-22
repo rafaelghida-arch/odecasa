@@ -20,8 +20,10 @@ function getClient(): Anthropic {
 }
 
 export class AIRefusalError extends Error {}
+/** Provedor ocupado ou fora do ar (vale tentar de novo). */
+export class AIBusyError extends Error {}
 
-const HAZARD_HINT: Record<Exclude<HazardKind, null>, string> = {
+export const HAZARD_HINT: Record<Exclude<HazardKind, null>, string> = {
   gas: "possível vazamento de gás",
   eletrica: "risco elétrico (fiação exposta, faísca ou similar)",
 };
@@ -69,7 +71,27 @@ function buildMessages(
   return messages;
 }
 
-export async function generateReply(opts: {
+export interface GenerateOptions {
+  mode: Mode;
+  history: HistoryTurn[];
+  text: string;
+  newImage: ValidImage | null;
+  contextImage: ValidImage | null;
+  hazard: HazardKind;
+}
+
+export async function generateWithAnthropic(opts: GenerateOptions): Promise<string> {
+  try {
+    return await anthropicReply(opts);
+  } catch (err) {
+    if (err instanceof Anthropic.RateLimitError || err instanceof Anthropic.InternalServerError) {
+      throw new AIBusyError("busy", { cause: err });
+    }
+    throw err;
+  }
+}
+
+async function anthropicReply(opts: {
   mode: Mode;
   history: HistoryTurn[];
   text: string;

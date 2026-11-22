@@ -1,6 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { randomUUID } from "node:crypto";
-import { generateReply, AIRefusalError, type HistoryTurn } from "@/lib/ai/generate";
+import { AIBusyError, AIRefusalError, generateReply, type HistoryTurn } from "@/lib/ai";
 import { demoReply } from "@/lib/ai/demo";
 import { detectHazard } from "@/lib/ai/safety";
 import { getOwnedConversation, listMessages } from "@/lib/conversations";
@@ -135,7 +134,7 @@ export async function POST(request: Request) {
         "Esse pedido eu não consigo atender. Se for algo da casa, tenta me contar de outro jeito ou mandar uma foto.";
     } else {
       logError("chat.ai", err);
-      const busy = err instanceof Anthropic.RateLimitError || err instanceof Anthropic.InternalServerError;
+      const busy = err instanceof AIBusyError;
       return jsonError(
         502,
         busy ? "A IA está ocupada agora. Tenta de novo em instantes." : "Não consegui responder agora. Tenta de novo.",

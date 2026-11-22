@@ -41,6 +41,6 @@ export function demoReply(opts: {
   }
 
   return mae
-    ? "Oi! Tô aqui para te ajudar, com calma. Me conta um pouco mais do que você quer resolver — se puder, manda uma foto que eu te digo por onde começar.\n\n(Resposta de demonstração: configure ANTHROPIC_API_KEY para respostas reais.)"
-    : "E aí! Bora resolver. Me diz o que tá acontecendo — se tiver foto, manda que fica mais rápido.\n\n(Resposta de demonstração: configure ANTHROPIC_API_KEY para respostas reais.)";
+    ? "Oi! Tô aqui para te ajudar, com calma. Me conta um pouco mais do que você quer resolver — se puder, manda uma foto que eu te digo por onde começar.\n\n(Resposta de demonstração: configure OPENAI_API_KEY para respostas reais.)"
+    : "E aí! Bora resolver. Me diz o que tá acontecendo — se tiver foto, manda que fica mais rápido.\n\n(Resposta de demonstração: configure OPENAI_API_KEY para respostas reais.)";
 }

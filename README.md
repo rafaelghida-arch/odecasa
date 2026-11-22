@@ -9,7 +9,7 @@ qualquer momento na mesma conversa.
 
 - Next.js 16 (App Router) · TypeScript · Tailwind CSS 4
 - Supabase Auth (link mágico / código por e-mail) + Postgres com Row Level Security
-- Anthropic Claude (visão) chamado só pelo servidor, com modo demonstração sem credenciais
+- OpenAI (modelo com visão, padrão `gpt-5.4-mini`) chamado só pelo servidor — Anthropic como alternativa — e modo demonstração sem credenciais
 - Pronto para Vercel
 
 ![Celular](docs/screenshots/04-resposta-mae.png)
@@ -44,7 +44,7 @@ gás, fiação exposta, faísca, mistura de produtos, estrutura…), indicando 1
 eletricista. Um detector simples (`src/lib/ai/safety.ts`) reforça o aviso ao modelo quando a mensagem fala de
 gás ou risco elétrico.
 
-**Modo demonstração:** sem `ANTHROPIC_API_KEY` (ou com `AI_DEMO_MODE=true`) a rota devolve respostas fixas.
+**Modo demonstração:** sem `OPENAI_API_KEY` nem `ANTHROPIC_API_KEY` (ou com `AI_DEMO_MODE=true`) a rota devolve respostas fixas.
 A interface mostra a faixa “Modo demonstração” e cada resposta leva o selo “demonstração”.
 
 ## Rodando localmente
@@ -70,7 +70,7 @@ npx supabase status -o env
 ```
 
 Copie `API_URL` → `NEXT_PUBLIC_SUPABASE_URL`, `ANON_KEY` → `NEXT_PUBLIC_SUPABASE_ANON_KEY` e
-`SERVICE_ROLE_KEY` → `SUPABASE_SERVICE_ROLE_KEY`. Deixe `ANTHROPIC_API_KEY` vazio para o modo demonstração ou
+`SERVICE_ROLE_KEY` → `SUPABASE_SERVICE_ROLE_KEY`. Deixe `OPENAI_API_KEY` vazio para o modo demonstração ou
 coloque sua chave.
 
 ```bash
@@ -118,10 +118,11 @@ Sem Supabase configurado o app ainda funciona como visitante (o login aparece co
 
 ## Publicando: provedor de IA
 
-Crie uma chave em https://console.anthropic.com e defina `ANTHROPIC_API_KEY`. O modelo padrão é
-`claude-opus-5-5` (troque com `ANTHROPIC_MODEL`). A chave só é lida no servidor (`src/lib/server-env.ts` importa
-`server-only`), nunca chega ao navegador. A rota ativa o *fallback* do lado do servidor para recusas indevidas
-de segurança (`fallbacks: "default"`).
+Crie uma chave em https://platform.openai.com/api-keys (a conta precisa ter crédito em *Billing*) e defina
+`OPENAI_API_KEY`. O modelo padrão é `gpt-5.4-mini`; troque com `OPENAI_MODEL` (precisa aceitar imagens, ex.:
+`gpt-5.5`). A chave só é lida no servidor (`src/lib/server-env.ts` importa `server-only`), nunca chega ao
+navegador. Para usar a Anthropic, defina `AI_PROVIDER=anthropic` e `ANTHROPIC_API_KEY` (modelo padrão
+`claude-opus-5-5`, ajustável com `ANTHROPIC_MODEL`). Código: `src/lib/ai/openai.ts` e `src/lib/ai/generate.ts`.
 
 ## Publicando: Vercel
 
@@ -134,7 +135,7 @@ de segurança (`fallbacks: "default"`).
    | `NEXT_PUBLIC_SUPABASE_URL` | Project URL do Supabase |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | chave anon/publishable |
    | `SUPABASE_SERVICE_ROLE_KEY` | chave service_role/secret (**sem** `NEXT_PUBLIC_`) |
-   | `ANTHROPIC_API_KEY` | chave da Anthropic |
+   | `OPENAI_API_KEY` | chave da OpenAI |
    | `RATE_LIMIT_SALT` | texto aleatório longo |
    | `RATE_LIMIT_GUEST_PER_HOUR` / `RATE_LIMIT_USER_PER_HOUR` | opcionais (12 / 60) |
 
@@ -149,7 +150,7 @@ npx vercel link
 ```
 
 ```bash
-npx vercel env add ANTHROPIC_API_KEY production
+npx vercel env add OPENAI_API_KEY production
 ```
 
 ```bash
