@@ -14,7 +14,7 @@ export default function Privacidade() {
       <div className="mt-5 space-y-4 text-[16px] leading-relaxed text-ink-2">
         <p>
           <strong className="text-ink">Fotos.</strong> Quando você anexa uma foto, ela é reduzida no seu aparelho e
-          enviada ao provedor de IA (OpenAI) apenas para responder a esta conversa. O Ô de Casa não grava a
+          enviada à IA do Google (Gemini, plano gratuito) para responder a esta conversa. No plano gratuito, o Google pode usar o texto e as fotos enviados para melhorar os serviços dele, por isso evite fotos com rostos, documentos ou endereço. O Ô de Casa não grava a
           imagem nem um link para ela. Durante a sessão, a última foto fica só na memória do navegador para dar
           contexto às próximas perguntas.
         </p>

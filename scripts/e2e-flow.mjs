@@ -54,7 +54,7 @@ log("câmera disponível no navegador de teste:", cameraOk);
 const inputs = page.locator('input[type="file"]');
 await (cameraOk ? inputs.nth(0) : inputs.nth(1)).setInputFiles(PHOTO);
 await page.getByAltText("Prévia da foto anexada").waitFor();
-await page.getByText("a foto vai para o provedor de IA").waitFor();
+await page.getByText("a foto vai para a IA do Google").waitFor();
 await page.getByRole("textbox", { name: "Mensagem" }).fill("Por onde eu começo?");
 await page.waitForTimeout(450); await page.screenshot({ path: `${OUT}/02-previa-foto.png` });
 

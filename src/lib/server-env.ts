@@ -10,6 +10,8 @@ export const serverEnv = {
   aiProvider: (process.env.AI_PROVIDER ?? "").toLowerCase(),
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
   openaiModel: process.env.OPENAI_MODEL || "gpt-5.4-mini",
+  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+  geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   anthropicModel: process.env.ANTHROPIC_MODEL || "claude-opus-5-5",
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
@@ -19,16 +21,18 @@ export const serverEnv = {
   forceDemo: process.env.AI_DEMO_MODE === "true",
 };
 
-export type AIProvider = "openai" | "anthropic";
+export type AIProvider = "gemini" | "openai" | "anthropic";
 
 /**
  * Provedor ativo: AI_PROVIDER, se definido; senão o que tiver chave
- * (OpenAI primeiro). Sem nenhuma chave, retorna null (modo demonstração).
+ * (Gemini, gratuito, primeiro). Sem nenhuma chave, retorna null (modo demonstração).
  */
 export function activeProvider(): AIProvider | null {
   if (serverEnv.forceDemo) return null;
+  if (serverEnv.aiProvider === "gemini") return serverEnv.geminiApiKey ? "gemini" : null;
   if (serverEnv.aiProvider === "openai") return serverEnv.openaiApiKey ? "openai" : null;
   if (serverEnv.aiProvider === "anthropic") return serverEnv.anthropicApiKey ? "anthropic" : null;
+  if (serverEnv.geminiApiKey) return "gemini";
   if (serverEnv.openaiApiKey) return "openai";
   if (serverEnv.anthropicApiKey) return "anthropic";
   return null;

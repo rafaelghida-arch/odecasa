@@ -97,8 +97,9 @@ export function Composer({
           <p className="flex items-start gap-1.5 text-[13px] leading-snug text-ink-2">
             <IconShield size={16} className="mt-px shrink-0 text-brand" />
             <span>
-              Ao enviar, a foto vai para o provedor de IA só para analisar esta conversa. A imagem não fica salva
-              no Ô de Casa.
+              Ao enviar, a foto vai para a IA do Google (Gemini) para analisar esta conversa. A imagem não fica
+              salva no Ô de Casa, mas no plano gratuito o Google pode usar o conteúdo para melhorar os serviços
+              dele. Evite fotos com rostos, documentos ou endereço.
             </span>
           </p>
         </div>

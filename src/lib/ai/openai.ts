@@ -7,10 +7,19 @@ import { serverEnv } from "@/lib/server-env";
 import { AIBusyError, AIRefusalError, HAZARD_HINT, type GenerateOptions, type HistoryTurn } from "./generate";
 import { BASE_SYSTEM_PROMPT, systemPromptFor } from "./prompt";
 
-let client: OpenAI | null = null;
-function getClient(): OpenAI {
-  if (!client) client = new OpenAI({ apiKey: serverEnv.openaiApiKey, maxRetries: 2, timeout: 55_000 });
-  return client;
+/** Gemini usa o endpoint compatível com a API da OpenAI. */
+const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/";
+
+type Flavor = "openai" | "gemini";
+const clients: Partial<Record<Flavor, OpenAI>> = {};
+function getClient(flavor: Flavor): OpenAI {
+  if (!clients[flavor]) {
+    clients[flavor] =
+      flavor === "gemini"
+        ? new OpenAI({ apiKey: serverEnv.geminiApiKey, baseURL: GEMINI_BASE_URL, maxRetries: 2, timeout: 55_000 })
+        : new OpenAI({ apiKey: serverEnv.openaiApiKey, maxRetries: 2, timeout: 55_000 });
+  }
+  return clients[flavor]!;
 }
 
 function dataUrl(image: ValidImage): string {
@@ -18,6 +27,7 @@ function dataUrl(image: ValidImage): string {
 }
 
 function buildMessages(
+  flavor: Flavor,
   system: string,
   history: HistoryTurn[],
   text: string,
@@ -33,7 +43,10 @@ function buildMessages(
   const parts: ChatCompletionContentPart[] = [];
   const image = newImage ?? contextImage;
   if (image) {
-    parts.push({ type: "image_url", image_url: { url: dataUrl(image), detail: "high" } });
+    parts.push({
+      type: "image_url",
+      image_url: flavor === "openai" ? { url: dataUrl(image), detail: "high" } : { url: dataUrl(image) },
+    });
     if (!newImage) {
       parts.push({ type: "text", text: "(Foto enviada antes nesta conversa, anexada só como referência.)" });
     }
@@ -43,14 +56,23 @@ function buildMessages(
   return messages;
 }
 
-export async function generateWithOpenAI(opts: GenerateOptions): Promise<string> {
+/** OpenAI ou Gemini (via endpoint compatível). */
+export async function generateWithOpenAI(opts: GenerateOptions, flavor: Flavor = "openai"): Promise<string> {
   const system = `${BASE_SYSTEM_PROMPT}\n\n${systemPromptFor(opts.mode, opts.hazard ? HAZARD_HINT[opts.hazard] : null)}`;
   try {
-    const completion = await getClient().chat.completions.create({
-      model: serverEnv.openaiModel,
-      messages: buildMessages(system, opts.history, opts.text, opts.newImage, opts.contextImage),
-      max_completion_tokens: 6000,
-    });
+    const messages = buildMessages(flavor, system, opts.history, opts.text, opts.newImage, opts.contextImage);
+    const completion =
+      flavor === "gemini"
+        ? await getClient("gemini").chat.completions.create({
+            model: serverEnv.geminiModel,
+            messages,
+            max_tokens: 6000,
+          })
+        : await getClient("openai").chat.completions.create({
+            model: serverEnv.openaiModel,
+            messages,
+            max_completion_tokens: 6000,
+          });
     const choice = completion.choices[0];
     if (!choice || choice.message.refusal) throw new AIRefusalError("refusal");
     const text = (choice.message.content ?? "").trim();
