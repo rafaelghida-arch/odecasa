@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/nunito";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,13 +18,13 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: "#F7F7F4",
+  themeColor: "#BFE4F6",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-dvh bg-bg text-ink antialiased">{children}</body>
+      <body className="min-h-dvh bg-meadow text-ink antialiased">{children}</body>
     </html>
   );
 }

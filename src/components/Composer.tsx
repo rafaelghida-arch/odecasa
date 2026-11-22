@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { IconAlert, IconCamera, IconClose, IconPaperclip, IconSend, IconShield } from "./icons";
+import { Mascot } from "./Mascot";
+import { IconCamera, IconClose, IconPaperclip, IconSend, IconShield } from "./icons";
 
 export interface Attachment {
   file: File;
@@ -69,37 +70,36 @@ export function Composer({
       {error && (
         <div
           role="alert"
-          className="fade-in mb-2 flex items-start gap-2 rounded-2xl border border-[#efcfc6] bg-danger-soft px-3.5 py-2.5 text-[14px] text-danger"
+          className="fade-in mb-2 flex items-center gap-2 rounded-[20px] border-2 border-[#f3c4b6] bg-danger-soft px-3 py-2 text-[14px] font-bold text-danger"
         >
-          <IconAlert size={18} className="mt-0.5 shrink-0" />
+          <Mascot mood="worried" size={34} compact animated={false} className="shrink-0" />
           <span>{error} Sua mensagem continua aqui.</span>
         </div>
       )}
 
       {attachment && (
-        <div className="fade-in mb-2 flex items-center gap-3 rounded-2xl border border-line bg-surface p-2 pr-3 shadow-[var(--shadow-soft)]">
+        <div className="fade-in card-chunky mb-2 flex items-center gap-3 rounded-[22px] bg-white p-2 pr-3">
           <div className="relative shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={attachment.url}
               alt="Prévia da foto anexada"
-              className="h-16 w-16 rounded-xl object-cover"
+              className="h-16 w-16 rounded-2xl object-cover"
             />
             <button
               type="button"
               onClick={onRemoveAttachment}
               aria-label="Remover foto"
-              className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-[var(--shadow-soft)] hover:bg-bg"
+              className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-line bg-white text-ink hover:bg-meadow"
             >
               <IconClose size={14} />
             </button>
           </div>
-          <p className="flex items-start gap-1.5 text-[13px] leading-snug text-ink-2">
+          <p className="flex items-start gap-1.5 text-[12.5px] font-semibold leading-snug text-ink-2">
             <IconShield size={16} className="mt-px shrink-0 text-brand" />
             <span>
-              Ao enviar, a foto vai para a IA do Google (Gemini) para analisar esta conversa. A imagem não fica
-              salva no Ô de Casa, mas no plano gratuito o Google pode usar o conteúdo para melhorar os serviços
-              dele. Evite fotos com rostos, documentos ou endereço.
+              A foto vai pro Gemini (Google) só pra analisar. Não salvamos a imagem, mas no plano grátis o Google
+              pode usar o conteúdo. Evite rostos e documentos.
             </span>
           </p>
         </div>
@@ -110,7 +110,7 @@ export function Composer({
           e.preventDefault();
           if (canSend) onSend();
         }}
-        className="flex items-end gap-1 rounded-[26px] border border-line-strong bg-surface p-1.5 shadow-[var(--shadow-lift)] focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20"
+        className="flex items-end gap-1.5 rounded-[26px] border-2 border-line-strong bg-white p-1.5 shadow-[0_5px_0_var(--line-strong)] focus-within:border-brand"
         aria-busy={sending}
       >
         <input
@@ -138,9 +138,9 @@ export function Composer({
           disabled={!cameraAvailable || sending}
           aria-label={cameraAvailable ? "Tirar foto com a câmera" : "Câmera indisponível — use a galeria"}
           title={cameraAvailable ? "Tirar foto" : "Câmera indisponível — use a galeria"}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-bg hover:text-ink disabled:opacity-35 disabled:hover:bg-transparent"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#dcf2fd] text-[#1f6a90] transition-transform active:scale-95 disabled:opacity-40"
         >
-          <IconCamera />
+          <IconCamera strokeWidth={2.2} />
         </button>
         <button
           type="button"
@@ -148,9 +148,9 @@ export function Composer({
           disabled={sending}
           aria-label="Anexar foto da galeria"
           title="Anexar foto"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-bg hover:text-ink disabled:opacity-35"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fff2c7] text-[#8a6410] transition-transform active:scale-95 disabled:opacity-40"
         >
-          <IconPaperclip />
+          <IconPaperclip strokeWidth={2.2} />
         </button>
         <label htmlFor="composer-text" className="sr-only">
           Mensagem
@@ -165,15 +165,15 @@ export function Composer({
           maxLength={4000}
           enterKeyHint="send"
           placeholder={attachment ? "Pergunte sobre a foto…" : "Escreva sua dúvida…"}
-          className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-1.5 py-[11px] text-[16px] leading-[22px] text-ink outline-none placeholder:text-ink-3 focus-visible:outline-none"
+          className="max-h-40 min-h-11 flex-1 resize-none bg-transparent px-1.5 py-[11px] text-[16px] font-semibold leading-[22px] text-ink outline-none placeholder:text-ink-3 focus-visible:outline-none"
         />
         <button
           type="submit"
           disabled={!canSend}
           aria-label={sending ? "Enviando" : "Enviar mensagem"}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-95 disabled:bg-[#c9d3ce] disabled:active:scale-100"
+          className="btn-chunky flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand text-brand-ink disabled:bg-[#c8dcc3]"
         >
-          <IconSend size={20} strokeWidth={2.25} />
+          <IconSend size={22} strokeWidth={3} />
         </button>
       </form>
     </div>

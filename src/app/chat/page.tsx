@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Conversa" };
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="app-height bg-bg" aria-busy="true" />}>
+    <Suspense fallback={<div className="app-height bg-meadow" aria-busy="true" />}>
       <ChatApp />
     </Suspense>
   );

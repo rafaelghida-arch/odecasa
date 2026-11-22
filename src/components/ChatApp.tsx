@@ -19,8 +19,10 @@ import { Composer, type Attachment } from "./Composer";
 import { HistoryPanel } from "./HistoryPanel";
 import { ModeSwitch } from "./ModeSwitch";
 import { RichText } from "./RichText";
-import { TopicIcon } from "./TopicIcon";
-import { IconCompose, IconShield, IconSidebar } from "./icons";
+import { Mascot } from "./Mascot";
+import { Scene } from "./Scene";
+import { TOPIC_TILE, TopicIcon } from "./TopicIcon";
+import { IconCompose, IconSidebar, IconUser } from "./icons";
 
 interface Me {
   user: { id: string; email: string | null } | null;
@@ -147,6 +149,8 @@ export function ChatApp() {
   }, [me, mode, messages]);
 
   useEffect(() => {
+    // Só rola até o fim quando há conversa; a tela vazia começa do topo.
+    if (messages.length === 0 && !pending) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     endRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "end" });
   }, [messages, pending]);
@@ -322,7 +326,7 @@ export function ChatApp() {
   const empty = visible.length === 0 && !loadingConversation;
 
   return (
-    <div className="app-height flex overflow-hidden bg-bg">
+    <div className="app-height flex overflow-hidden bg-meadow">
       <HistoryPanel
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
@@ -337,72 +341,88 @@ export function ChatApp() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="pt-safe pl-safe pr-safe shrink-0 border-b border-line/70 bg-bg/90 backdrop-blur-md">
-          <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 sm:px-3">
-            <div className="flex items-center gap-1">
+        <header className="pt-safe pl-safe pr-safe relative z-10 shrink-0 bg-sky-top">
+          <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 px-3">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setHistoryOpen((o) => !o)}
                 aria-label={historyOpen ? "Fechar histórico" : "Abrir histórico"}
                 aria-expanded={historyOpen}
                 aria-controls="history-panel"
-                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-2 hover:bg-surface hover:text-ink"
+                className="btn-white flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-ink"
               >
-                <IconSidebar />
+                <IconSidebar size={20} />
               </button>
-              <Link
-                href="/"
-                className="hidden rounded-lg px-1 text-[16px] font-semibold tracking-tight text-ink md:inline"
-              >
+              <Link href="/" className="hidden text-[18px] font-black uppercase tracking-tight text-ink md:inline">
                 Ô de Casa
               </Link>
             </div>
             <ModeSwitch value={mode} onChange={changeMode} />
-            <div className="flex items-center justify-end gap-1">
+            <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={newConversation}
                 aria-label="Nova conversa"
-                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-2 hover:bg-surface hover:text-ink"
+                className="btn-white flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-ink"
               >
-                <IconCompose />
+                <IconCompose size={20} />
               </button>
               {me && !me.user && me.authAvailable && (
-                <Link
-                  href="/entrar"
-                  className="flex min-h-11 items-center rounded-full px-2.5 text-[15px] font-semibold text-brand hover:bg-surface sm:px-3"
-                >
-                  Entrar
-                </Link>
+                <>
+                  <Link
+                    href="/entrar"
+                    aria-label="Entrar"
+                    className="btn-white flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-brand-dark min-[420px]:hidden"
+                  >
+                    <IconUser size={20} />
+                  </Link>
+                  <Link
+                    href="/entrar"
+                    className="btn-white hidden min-h-11 items-center rounded-2xl bg-white px-3 text-[14px] font-extrabold text-brand-dark min-[420px]:flex"
+                  >
+                    Entrar
+                  </Link>
+                </>
               )}
             </div>
           </div>
+          <svg
+            className="absolute inset-x-0 top-full h-4 w-full"
+            viewBox="0 0 400 16"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path d="M0 0 H400 V6 Q350 16 300 8 Q250 0 200 9 Q150 16 100 7 Q50 0 0 8 Z" fill="var(--sky-top)" />
+          </svg>
         </header>
 
         <main className="pl-safe pr-safe min-h-0 flex-1 overflow-y-auto overscroll-contain" aria-live="polite">
-          <div className="mx-auto w-full max-w-[720px] px-4 pb-6 pt-4 sm:px-6">
+          <div className="mx-auto w-full max-w-[720px] px-4 pb-6 pt-6 sm:px-6">
             {me?.demo && (
-              <p className="mb-4 rounded-full border border-[#eadfbf] bg-warn-soft px-3.5 py-1.5 text-center text-[12.5px] text-[#6b5a22]">
+              <p className="mb-4 rounded-2xl border-2 border-[#f0dc95] bg-warn-soft px-3.5 py-2 text-center text-[13px] font-bold text-[#7a6216]">
                 Modo demonstração: respostas de exemplo, sem IA de verdade.
               </p>
             )}
 
             {notice && (
-              <p role="status" className="fade-in mb-4 rounded-2xl bg-brand-soft px-4 py-2.5 text-[14px] text-brand">
+              <p role="status" className="fade-in card-chunky mb-4 rounded-2xl bg-white px-4 py-3 text-[14.5px] font-bold text-brand-dark">
                 {notice}
               </p>
             )}
 
             {empty && (
-              <section className="fade-in flex flex-col items-center pt-[8vh] text-center">
-                <h1 className="text-[26px] font-semibold tracking-tight sm:text-[30px]">
+              <section className="fade-in flex flex-col items-center text-center">
+                <Scene height={200} className="w-full rounded-[32px] border-4 border-white shadow-[0_6px_0_#c3e3ba]">
+                  <Mascot mode={mode} size={112} />
+                </Scene>
+                <h1 className="mt-4 text-[28px] font-black leading-tight tracking-tight">
                   {mode === "mae" ? "Oi! Me conta o que tá rolando." : "Bora. Qual é a missão?"}
                 </h1>
-                <p className="mt-2 max-w-[440px] text-[15px] leading-relaxed text-ink-2">
-                  Escreva sua dúvida ou mande uma foto. Mãe e Pai são dois modos da mesma IA — dá para trocar a
-                  qualquer momento.
+                <p className="mt-1.5 max-w-[440px] text-[15.5px] font-semibold leading-relaxed text-ink-2">
+                  Escreve tua dúvida ou manda uma foto. Mãe e Pai são dois jeitos da mesma IA — troca quando quiser.
                 </p>
-                <div className="mt-7 grid w-full max-w-[520px] grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="mt-5 grid w-full grid-cols-2 gap-3">
                   {EXAMPLES.map((ex) => (
                     <button
                       key={ex.topic}
@@ -411,22 +431,25 @@ export function ChatApp() {
                         setText(ex.prompt);
                         document.getElementById("composer-text")?.focus();
                       }}
-                      className="flex min-h-14 items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left shadow-[var(--shadow-soft)] transition-colors hover:border-line-strong"
+                      className="card-chunky card-press flex flex-col items-start gap-1.5 rounded-[22px] bg-white p-3 text-left"
                     >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
-                        <TopicIcon topic={ex.topic} size={18} />
+                      <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${TOPIC_TILE[ex.topic]}`}>
+                        <TopicIcon topic={ex.topic} size={26} />
                       </span>
-                      <span>
-                        <span className="block text-[12.5px] font-medium text-ink-3">{ex.label}</span>
-                        <span className="block text-[14.5px] leading-snug text-ink">{ex.prompt}</span>
-                      </span>
+                      <span className="text-[11.5px] font-extrabold uppercase tracking-wide text-ink-3">{ex.label}</span>
+                      <span className="text-[14px] font-bold leading-snug text-ink">{ex.prompt}</span>
                     </button>
                   ))}
                 </div>
               </section>
             )}
 
-            {loadingConversation && <p className="pt-10 text-center text-[14px] text-ink-3">Abrindo conversa…</p>}
+            {loadingConversation && (
+              <div className="flex flex-col items-center pt-10 text-[15px] font-bold text-ink-3">
+                <Mascot mode={mode} mood="thinking" size={90} />
+                Abrindo conversa…
+              </div>
+            )}
 
             <ol className="space-y-5" aria-label="Mensagens">
               {visible.map((m, i) => {
@@ -435,29 +458,30 @@ export function ChatApp() {
                 return (
                   <li key={m.id} className="fade-in">
                     {switched && (
-                      <div className="mb-4 flex items-center gap-3 text-[12px] text-ink-3" role="separator">
-                        <span className="h-px flex-1 bg-line" />
-                        Agora no modo {MODE_LABEL[m.mode]}
-                        <span className="h-px flex-1 bg-line" />
+                      <div className="mb-5 flex justify-center" role="separator">
+                        <span className="card-chunky flex items-center gap-1.5 rounded-full bg-white py-1 pl-1.5 pr-3.5 text-[13px] font-extrabold text-ink-2">
+                          <Mascot mode={m.mode} size={26} compact animated={false} />
+                          Agora no modo {MODE_LABEL[m.mode]}
+                        </span>
                       </div>
                     )}
                     {m.role === "user" ? (
-                      <div className="flex flex-col items-end gap-1.5">
+                      <div className="flex flex-col items-end gap-2">
                         {m.previewUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={m.previewUrl}
                             alt="Foto que você enviou"
-                            className="max-h-64 max-w-[75%] rounded-2xl border border-line object-cover"
+                            className="max-h-64 max-w-[75%] rounded-[22px] border-4 border-white object-cover shadow-[0_4px_0_#c3e3ba]"
                           />
                         ) : m.hasImage ? (
-                          <span className="rounded-full border border-line bg-surface px-3 py-1 text-[12.5px] text-ink-3">
-                            Foto analisada (não fica salva)
+                          <span className="rounded-full border-2 border-line bg-white px-3 py-1 text-[12.5px] font-bold text-ink-3">
+                            📷 Foto analisada (não fica salva)
                           </span>
                         ) : null}
                         {m.content !== "(foto)" && (
                           <div
-                            className={`max-w-[85%] whitespace-pre-wrap rounded-[20px] rounded-br-md bg-brand px-4 py-2.5 text-[16px] leading-relaxed text-brand-ink ${
+                            className={`max-w-[85%] whitespace-pre-wrap rounded-[24px] rounded-br-lg bg-brand px-4 py-3 text-[16px] font-bold leading-relaxed text-brand-ink shadow-[0_4px_0_var(--brand-dark)] ${
                               m.id === "pending" ? "opacity-70" : ""
                             }`}
                           >
@@ -467,12 +491,19 @@ export function ChatApp() {
                         )}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-start gap-1.5">
-                        <span className="pl-1 text-[12.5px] font-medium text-ink-3">
-                          {MODE_LABEL[m.mode]} · IA{m.demo ? " · demonstração" : ""}
-                        </span>
-                        <div className="max-w-[92%] rounded-[20px] rounded-tl-md border border-line bg-surface px-4 py-3 text-[16px] leading-relaxed text-ink shadow-[var(--shadow-soft)]">
-                          <RichText text={m.content} />
+                      <div className="flex items-start gap-2">
+                        <Mascot mode={m.mode} size={40} compact animated={false} className="mt-6 shrink-0" />
+                        <div className="flex min-w-0 flex-col items-start gap-1.5">
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[12px] font-extrabold ${
+                              m.mode === "mae" ? "bg-[#ffe3ee] text-[#a23a66]" : "bg-[#dcf2fd] text-[#1f6a90]"
+                            }`}
+                          >
+                            {MODE_LABEL[m.mode]} · IA{m.demo ? " · demonstração" : ""}
+                          </span>
+                          <div className="card-chunky max-w-full rounded-[24px] rounded-tl-lg bg-white px-4 py-3 text-[16px] font-semibold leading-relaxed text-ink">
+                            <RichText text={m.content} />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -480,12 +511,12 @@ export function ChatApp() {
                 );
               })}
               {pending && (
-                <li className="flex flex-col items-start gap-1.5" aria-label="Escrevendo resposta">
-                  <span className="pl-1 text-[12.5px] font-medium text-ink-3">{MODE_LABEL[mode]} · IA</span>
-                  <div className="dot-pulse flex gap-1 rounded-[20px] rounded-tl-md border border-line bg-surface px-4 py-4">
-                    <span className="h-2 w-2 rounded-full bg-ink-3" />
-                    <span className="h-2 w-2 rounded-full bg-ink-3" />
-                    <span className="h-2 w-2 rounded-full bg-ink-3" />
+                <li className="flex items-start gap-2" aria-label="Escrevendo resposta">
+                  <Mascot mode={mode} mood="thinking" size={40} compact className="mt-1 shrink-0" />
+                  <div className="card-chunky dot-pulse flex gap-1.5 rounded-[24px] rounded-tl-lg bg-white px-5 py-4">
+                    <span className="h-2.5 w-2.5 rounded-full bg-grass" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-grass" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-grass" />
                   </div>
                 </li>
               )}
@@ -494,26 +525,26 @@ export function ChatApp() {
           </div>
         </main>
 
-        <div className="pb-safe pl-safe pr-safe shrink-0 bg-gradient-to-t from-bg via-bg to-bg/0 pt-2">
+        <div className="pb-safe pl-safe pr-safe shrink-0 bg-gradient-to-t from-meadow via-meadow to-meadow/0 pt-2">
           {loggedIn && unsavedGuest && (
             <div className="mx-auto mb-2 w-full max-w-[720px] px-3 sm:px-4">
-              <div className="fade-in flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-soft)]">
-                <IconShield size={18} className="shrink-0 text-brand" />
-                <p className="min-w-[180px] flex-1 text-[14px] text-ink-2">
-                  Você entrou. Quer salvar esta conversa na sua conta?
+              <div className="fade-in card-chunky flex flex-wrap items-center gap-2 rounded-[22px] bg-white px-3 py-3">
+                <Mascot mode={mode} size={36} compact animated={false} />
+                <p className="min-w-[160px] flex-1 text-[14.5px] font-bold text-ink">
+                  Você entrou! Quer salvar esta conversa na sua conta?
                 </p>
                 <button
                   type="button"
                   onClick={saveGuestConversation}
                   disabled={saving}
-                  className="min-h-10 rounded-full bg-brand px-4 text-[14px] font-semibold text-brand-ink hover:opacity-90 disabled:opacity-60"
+                  className="btn-chunky min-h-10 rounded-2xl bg-brand px-4 text-[14px] font-extrabold text-brand-ink disabled:opacity-60"
                 >
                   {saving ? "Salvando…" : "Salvar conversa"}
                 </button>
                 <button
                   type="button"
                   onClick={discardGuest}
-                  className="min-h-10 rounded-full px-3 text-[14px] font-medium text-ink-2 hover:text-ink"
+                  className="min-h-10 rounded-2xl px-3 text-[14px] font-bold text-ink-2 hover:text-ink"
                 >
                   Descartar
                 </button>
@@ -532,7 +563,7 @@ export function ChatApp() {
             cameraAvailable={cameraAvailable}
             autoFocus={Boolean(paramPrompt)}
           />
-          <p className="mx-auto max-w-[720px] px-4 pb-2 pt-1.5 text-center text-[11.5px] text-ink-3">
+          <p className="mx-auto max-w-[720px] px-4 pb-2 pt-2 text-center text-[11.5px] font-bold text-ink-3">
             IA pode errar. Em risco (gás, fiação, fogo), pare e procure ajuda: 193 ou 192.
           </p>
         </div>
