@@ -78,6 +78,7 @@ export interface GenerateOptions {
   newImage: ValidImage | null;
   contextImage: ValidImage | null;
   hazard: HazardKind;
+  voice?: boolean;
 }
 
 export async function generateWithAnthropic(opts: GenerateOptions): Promise<string> {
@@ -92,6 +93,7 @@ export async function generateWithAnthropic(opts: GenerateOptions): Promise<stri
 }
 
 async function anthropicReply(opts: {
+  voice?: boolean;
   mode: Mode;
   history: HistoryTurn[];
   text: string;
@@ -108,7 +110,7 @@ async function anthropicReply(opts: {
     output_config: { effort: "medium" },
     system: [
       { type: "text", text: BASE_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-      { type: "text", text: systemPromptFor(opts.mode, opts.hazard ? HAZARD_HINT[opts.hazard] : null) },
+      { type: "text", text: systemPromptFor(opts.mode, opts.hazard ? HAZARD_HINT[opts.hazard] : null, opts.voice) },
     ],
     messages: buildMessages(opts.history, opts.text, opts.newImage, opts.contextImage),
   });

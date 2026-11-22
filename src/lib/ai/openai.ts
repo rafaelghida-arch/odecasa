@@ -74,7 +74,7 @@ function readText(completion: OpenAI.Chat.Completions.ChatCompletion): string {
 
 /** OpenAI ou Gemini (via endpoint compatível). */
 export async function generateWithOpenAI(opts: GenerateOptions, flavor: Flavor = "openai"): Promise<string> {
-  const system = `${BASE_SYSTEM_PROMPT}\n\n${systemPromptFor(opts.mode, opts.hazard ? HAZARD_HINT[opts.hazard] : null)}`;
+  const system = `${BASE_SYSTEM_PROMPT}\n\n${systemPromptFor(opts.mode, opts.hazard ? HAZARD_HINT[opts.hazard] : null, opts.voice)}`;
   const messages = buildMessages(flavor, system, opts.history, opts.text, opts.newImage, opts.contextImage);
 
   if (flavor === "openai") {

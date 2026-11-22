@@ -44,6 +44,13 @@ gás, fiação exposta, faísca, mistura de produtos, estrutura…), indicando 1
 eletricista. Um detector simples (`src/lib/ai/safety.ts`) reforça o aviso ao modelo quando a mensagem fala de
 gás ou risco elétrico.
 
+**Ligação de voz:** o botão de telefone no topo do chat (ou “Ligar pra Mãe/Pro Pai”) abre uma ligação. A voz da
+pessoa vira texto pelo reconhecimento de fala do próprio navegador (Web Speech API: Chrome e Safari; o Firefox não
+tem), vai para a mesma rota `/api/chat` com `voice: true` — a IA responde curto, sem listas, um passo por vez — e a
+resposta é falada pela voz do aparelho (tom mais agudo na Mãe, mais grave no Pai). Dá para mostrar uma foto durante
+a ligação, interromper tocando na Casinha e desligar o microfone. Tudo fica registrado como texto na conversa.
+Código: `src/components/VoiceCall.tsx`. Teste: `scripts/e2e-call.mjs`.
+
 **Modo demonstração:** sem nenhuma chave de IA (`GEMINI_API_KEY`, `OPENAI_API_KEY` ou `ANTHROPIC_API_KEY`) (ou com `AI_DEMO_MODE=true`) a rota devolve respostas fixas.
 A interface mostra a faixa “Modo demonstração” e cada resposta leva o selo “demonstração”.
 

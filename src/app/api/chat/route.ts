@@ -22,6 +22,7 @@ interface Payload {
   text: string;
   conversationId: string | null;
   history: HistoryTurn[];
+  voice: boolean;
 }
 
 function parsePayload(raw: FormDataEntryValue | null): Payload | null {
@@ -51,7 +52,7 @@ function parsePayload(raw: FormDataEntryValue | null): Payload | null {
       history.push({ role: h.role, content, hasImage: h.hasImage === true });
     }
   }
-  return { mode: d.mode, text, conversationId, history };
+  return { mode: d.mode, text, conversationId, history, voice: d.voice === true };
 }
 
 export async function POST(request: Request) {
@@ -127,7 +128,15 @@ export async function POST(request: Request) {
           previousUserTurns: history.filter((h) => h.role === "user").length,
           hazard,
         })
-      : await generateReply({ mode: payload.mode, history, text: payload.text, newImage, contextImage, hazard });
+      : await generateReply({
+          mode: payload.mode,
+          history,
+          text: payload.text,
+          newImage,
+          contextImage,
+          hazard,
+          voice: payload.voice,
+        });
   } catch (err) {
     if (err instanceof AIRefusalError) {
       reply =

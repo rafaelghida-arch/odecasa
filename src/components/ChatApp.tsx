@@ -22,7 +22,8 @@ import { RichText } from "./RichText";
 import { Mascot } from "./Mascot";
 import { Scene } from "./Scene";
 import { TOPIC_TILE, TopicIcon } from "./TopicIcon";
-import { IconCompose, IconSidebar, IconUser } from "./icons";
+import { IconCompose, IconPhone, IconSidebar, IconUser } from "./icons";
+import { VoiceCall, voiceCallSupported } from "./VoiceCall";
 
 interface Me {
   user: { id: string; email: string | null } | null;
@@ -65,9 +66,14 @@ export function ChatApp() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [loadingConversation, setLoadingConversation] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
 
   /** Última foto desta sessão (só em memória) para dar contexto às próximas perguntas. */
   const contextImage = useRef<File | null>(null);
+  const modeRef = useRef<Mode>(mode);
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
   const endRef = useRef<HTMLDivElement>(null);
 
   const loggedIn = Boolean(me?.user);
@@ -260,6 +266,74 @@ export function ChatApp() {
     setNotice("Conversa apagada.");
   }
 
+  // Referências sempre atualizadas (a ligação chama o envio várias vezes seguidas).
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const conversationRef = useRef<string | null>(null);
+  useEffect(() => {
+    messagesRef.current = messages;
+    conversationRef.current = conversationId;
+  }, [messages, conversationId]);
+
+  /**
+   * Envia uma mensagem para a IA e acrescenta o par pergunta/resposta na conversa.
+   * Usado pelo campo de texto e pela ligação de voz. Lança erro com mensagem amigável.
+   */
+  async function postChat(t: string, att: Attachment | null, voice: boolean): Promise<ChatMessage> {
+    let convId = conversationRef.current;
+    if (loggedIn && unsavedGuest) convId = await importGuest();
+
+    const history = convId
+      ? []
+      : messagesRef.current.map((m) => ({ role: m.role, content: m.content, hasImage: m.hasImage }));
+    const form = new FormData();
+    form.append("payload", JSON.stringify({ mode: modeRef.current, text: t, conversationId: convId, history, voice }));
+    if (att) form.append("image", att.file);
+    else if (contextImage.current) form.append("contextImage", contextImage.current);
+
+    let res: Response;
+    try {
+      res = await fetch("/api/chat", { method: "POST", body: form });
+    } catch {
+      throw new Error("Sem conexão. Confere a internet e tenta de novo.");
+    }
+    const data = (await readJson(res)) as (ChatResponse & { error?: string }) | null;
+    if (!res.ok || !data?.assistantMessage) {
+      throw new Error(data?.error ?? "Não consegui enviar agora. Tenta de novo.");
+    }
+
+    if (att) contextImage.current = att.file;
+    const added = [{ ...data.userMessage, previewUrl: att?.url }, data.assistantMessage];
+    messagesRef.current = [...messagesRef.current, ...added];
+    setMessages((prev) => [...prev, ...added]);
+    if (data.conversationId) {
+      if (data.conversationId !== convId) {
+        conversationRef.current = data.conversationId;
+        setConversationId(data.conversationId);
+        router.replace(`/chat?c=${data.conversationId}`);
+      }
+      void refreshList();
+    }
+    return data.assistantMessage;
+  }
+
+  function startCall() {
+    setError(null);
+    if (!voiceCallSupported()) {
+      setNotice(
+        "Este navegador não tem reconhecimento de voz. Para ligar, use o Chrome (Android ou computador) ou o Safari (iPhone).",
+      );
+      return;
+    }
+    // iPhone: a voz só toca se a primeira fala nascer de um toque.
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+    } catch {
+      /* sem voz disponível */
+    }
+    setCallOpen(true);
+  }
+
   async function send() {
     const t = text.trim();
     const att = attachment;
@@ -280,37 +354,7 @@ export function ChatApp() {
     setAttachment(null);
 
     try {
-      let convId = conversationId;
-      if (loggedIn && unsavedGuest) convId = await importGuest();
-
-      const history = convId
-        ? []
-        : messages.map((m) => ({ role: m.role, content: m.content, hasImage: m.hasImage }));
-      const form = new FormData();
-      form.append("payload", JSON.stringify({ mode, text: t, conversationId: convId, history }));
-      if (att) form.append("image", att.file);
-      else if (contextImage.current) form.append("contextImage", contextImage.current);
-
-      let res: Response;
-      try {
-        res = await fetch("/api/chat", { method: "POST", body: form });
-      } catch {
-        throw new Error("Sem conexão. Confere a internet e tenta de novo.");
-      }
-      const data = (await readJson(res)) as (ChatResponse & { error?: string }) | null;
-      if (!res.ok || !data?.assistantMessage) {
-        throw new Error(data?.error ?? "Não consegui enviar agora. Tenta de novo.");
-      }
-
-      if (att) contextImage.current = att.file;
-      setMessages((prev) => [...prev, { ...data.userMessage, previewUrl: att?.url }, data.assistantMessage]);
-      if (data.conversationId) {
-        if (data.conversationId !== convId) {
-          setConversationId(data.conversationId);
-                router.replace(`/chat?c=${data.conversationId}`);
-        }
-        void refreshList();
-      }
+      await postChat(t, att, false);
     } catch (e) {
       // Preserva texto e prévia para tentar de novo.
       setText(t);
@@ -364,9 +408,18 @@ export function ChatApp() {
                 type="button"
                 onClick={newConversation}
                 aria-label="Nova conversa"
-                className="btn-white flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-ink"
+                className="btn-white hidden h-11 w-11 items-center justify-center rounded-2xl bg-white text-ink sm:flex"
               >
                 <IconCompose size={20} />
+              </button>
+              <button
+                type="button"
+                onClick={startCall}
+                aria-label={`Ligar para ${MODE_LABEL[mode]}`}
+                title={`Ligar para ${MODE_LABEL[mode]}`}
+                className="btn-chunky flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-brand-ink"
+              >
+                <IconPhone size={21} strokeWidth={2.4} />
               </button>
               {me && !me.user && me.authAvailable && (
                 <>
@@ -422,6 +475,14 @@ export function ChatApp() {
                 <p className="mt-1.5 max-w-[440px] text-[15.5px] font-semibold leading-relaxed text-ink-2">
                   Escreve tua dúvida ou manda uma foto. Mãe e Pai são dois jeitos da mesma IA — troca quando quiser.
                 </p>
+                <button
+                  type="button"
+                  onClick={startCall}
+                  className="btn-chunky mt-4 flex min-h-[54px] items-center gap-2 rounded-[20px] bg-brand px-6 text-[17px] font-black text-brand-ink"
+                >
+                  <IconPhone size={22} strokeWidth={2.4} />
+                  {mode === "mae" ? "Ligar pra Mãe" : "Ligar pro Pai"}
+                </button>
                 <div className="mt-5 grid w-full grid-cols-2 gap-3">
                   {EXAMPLES.map((ex) => (
                     <button
@@ -568,6 +629,13 @@ export function ChatApp() {
           </p>
         </div>
       </div>
+      {callOpen && (
+        <VoiceCall
+          mode={mode}
+          onClose={() => setCallOpen(false)}
+          onUtterance={async (t, img) => (await postChat(t, img, true)).content}
+        />
+      )}
     </div>
   );
 }

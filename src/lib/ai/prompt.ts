@@ -27,8 +27,15 @@ const MODE_PROMPT: Record<Mode, string> = {
   pai: `Modo ativo agora: PAI. Tom direto e encorajador. Vá ao ponto, frases curtas, foco no próximo passo prático, com confiança ("tu consegue, vamos lá"). Firme, mas sem grosseria e sem sermão.`,
 };
 
-export function systemPromptFor(mode: Mode, hazardHint: string | null): string {
+const VOICE_PROMPT = `Agora é uma LIGAÇÃO DE VOZ: a pessoa está falando com você pelo telefone e vai OUVIR a resposta, não ler.
+- Responda como numa conversa falada: no máximo 3 ou 4 frases curtas.
+- Sem listas, sem números de passo, sem negrito, sem emojis, sem títulos. Diga um passo por vez e pergunte se deu certo.
+- O texto da pessoa vem de reconhecimento de voz e pode ter palavras trocadas; interprete com bom senso e, se não entender, peça para repetir.
+- Comece direto, sem "alô" (a ligação já foi atendida). Nas regras de segurança, seja ainda mais direto e curto.`;
+
+export function systemPromptFor(mode: Mode, hazardHint: string | null, voice = false): string {
   let extra = MODE_PROMPT[mode];
+  if (voice) extra += `\n\n${VOICE_PROMPT}`;
   if (hazardHint) {
     extra += `\n\nAtenção: a última mensagem sugere ${hazardHint}. Aplique as regras de segurança antes de qualquer instrução.`;
   }

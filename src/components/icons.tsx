@@ -110,3 +110,19 @@ export const IconAlert = (p: P) => (
     <path d="M12 10v4M12 17h.01" />
   </Base>
 );
+export const IconPhone = (p: P) => (
+  <Base {...p}>
+    <path d="M5 4.5h3l1.5 4-2 1.3a10 10 0 0 0 6.7 6.7l1.3-2 4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 3 6.7 2 2 0 0 1 5 4.5z" />
+  </Base>
+);
+export const IconMic = (p: P) => (
+  <Base {...p}>
+    <rect x="9" y="3.5" width="6" height="11" rx="3" />
+    <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+  </Base>
+);
+export const IconMicOff = (p: P) => (
+  <Base {...p}>
+    <path d="M15 10V6.5a3 3 0 0 0-5.8-1M9 9v2.5a3 3 0 0 0 4.6 2.5M5.5 11a6.5 6.5 0 0 0 10.3 5.3M18.5 11a6.4 6.4 0 0 1-.6 2.7M12 17.5V21M4 4l16 16" />
+  </Base>
+);

@@ -36,9 +36,19 @@ function Flower({ x, color }: { x: number; color: string }) {
  * Cenário ilustrado: céu, nuvens, morrinhos e flores.
  * O conteúdo (mascote) fica em pé sobre o gramado.
  */
-export function Scene({ children, height = 300, className = "" }: { children?: ReactNode; height?: number; className?: string }) {
+export function Scene({
+  children,
+  height = 300,
+  className = "",
+}: {
+  children?: ReactNode;
+  /** Altura em px, ou "fill" para ocupar o contêiner. */
+  height?: number | "fill";
+  className?: string;
+}) {
+  const fill = height === "fill";
   return (
-    <div className={`sky relative overflow-hidden ${className}`} style={{ height }}>
+    <div className={`sky relative overflow-hidden ${fill ? "h-full" : ""} ${className}`} style={fill ? undefined : { height }}>
       <Cloud className="drift absolute left-[4%] top-[14%] opacity-90" scale={0.9} />
       <Cloud className="drift absolute right-[2%] top-[6%] opacity-80 [animation-delay:-6s]" scale={1.15} />
       <Cloud className="drift absolute left-[44%] top-[2%] opacity-60 [animation-delay:-11s]" scale={0.6} />
@@ -48,7 +58,7 @@ export function Scene({ children, height = 300, className = "" }: { children?: R
 
       <svg
         className="absolute inset-x-0 bottom-0 w-full"
-        height={height * 0.46}
+        height={fill ? "34%" : height * 0.46}
         viewBox="0 0 400 140"
         preserveAspectRatio="none"
         aria-hidden="true"
