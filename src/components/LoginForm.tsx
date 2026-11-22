@@ -114,7 +114,7 @@ export function LoginForm() {
           </div>
           <form onSubmit={verifyCode} className="space-y-3">
             <label htmlFor="code" className="block text-[14px] font-medium text-ink">
-              Ou digite o código de 6 dígitos do e-mail
+              Ou digite o código que veio no e-mail (se houver)
             </label>
             <input
               id="code"

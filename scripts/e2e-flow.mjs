@@ -139,7 +139,7 @@ await dp.getByRole("button", { name: "Enviar link de acesso" }).click();
 await dp.getByText("Pronto! Enviamos um link").waitFor();
 const html2 = await latestMailFor(email);
 const code = html2.match(/<strong>(\d{6,10})<\/strong>/)[1];
-await dp.getByLabel(/código de 6 dígitos/).fill(code);
+await dp.getByLabel(/código que veio no e-mail/).fill(code);
 await dp.getByRole("button", { name: "Entrar com código" }).click();
 await dp.waitForURL("**/chat?entrou=1");
 await dp.locator("#history-panel").getByRole("button", { name: /^Por onde eu começo\?/ }).click();
