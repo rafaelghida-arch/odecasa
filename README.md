@@ -12,7 +12,7 @@ qualquer momento na mesma conversa.
 - Google Gemini no plano gratuito (padrão `gemini-3.5-flash`, com visão) chamado só pelo servidor — OpenAI e Anthropic como alternativas pagas — e modo demonstração sem credenciais
 - Pronto para Vercel
 
-![Celular](docs/screenshots/04-resposta-mae.png)
+![Tela inicial](docs/screenshots/no-ar-inicio.png) ![Conversa](docs/screenshots/no-ar-conversa.png)
 
 ## Como funciona
 
